@@ -1,294 +1,365 @@
+from pathlib import Path
+
+app_code = r'''
 import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import matplotlib.pyplot as plt
-
 
 # ============================================================
 # PAGE CONFIG
 # ============================================================
-
 st.set_page_config(
-    page_title="Numerical Integration Lab",
-    page_icon="📐",
+    page_title="Project #3 | Numerical Integration",
+    page_icon="∫",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
-
 # ============================================================
-# CUSTOM CSS
+# DESIGN / CSS
 # ============================================================
+st.markdown(
+    """
+    <style>
+    /* ---------- Base ---------- */
+    [data-testid="stAppViewContainer"] {
+        background: #f5f7fb;
+    }
 
-st.markdown("""
-<style>
-
-    /* ================================
-       GLOBAL
-    ================================= */
-
-    .stApp {
-        background:
-            linear-gradient(
-                135deg,
-                #f8fbff 0%,
-                #f4f7fb 50%,
-                #eef4ff 100%
-            );
+    [data-testid="stHeader"] {
+        background: rgba(245,247,251,0.92);
     }
 
     .main .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 3rem;
-        max-width: 1400px;
+        max-width: 1450px;
+        padding: 1.25rem 2rem 3rem 2rem;
     }
 
-
-    /* ================================
-       SIDEBAR
-    ================================= */
-
+    /* ---------- Sidebar: LIGHT so input text is always visible ---------- */
     section[data-testid="stSidebar"] {
-        background:
-            linear-gradient(
-                180deg,
-                #111827 0%,
-                #172554 50%,
-                #1e3a8a 100%
-            );
+        background: #ffffff;
+        border-right: 1px solid #e5e7eb;
+    }
+
+    section[data-testid="stSidebar"] > div {
+        padding: 1.25rem 1rem;
     }
 
     section[data-testid="stSidebar"] * {
+        color: #172033 !important;
+    }
+
+    section[data-testid="stSidebar"] input {
+        color: #172033 !important;
+        -webkit-text-fill-color: #172033 !important;
+        background: #ffffff !important;
+    }
+
+    section[data-testid="stSidebar"] [data-baseweb="select"] > div {
+        background: #ffffff !important;
+        color: #172033 !important;
+        border-color: #d7dce5 !important;
+    }
+
+    section[data-testid="stSidebar"] [data-baseweb="select"] span {
+        color: #172033 !important;
+    }
+
+    section[data-testid="stSidebar"] .stSlider [data-baseweb="slider"] {
+        color: #2563eb !important;
+    }
+
+    .side-brand {
+        padding: 18px 16px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #111827, #1d4ed8);
+        color: white !important;
+        margin-bottom: 18px;
+        box-shadow: 0 10px 25px rgba(37,99,235,.16);
+    }
+
+    .side-brand * {
         color: white !important;
     }
 
-    section[data-testid="stSidebar"] .stSelectbox label,
-    section[data-testid="stSidebar"] .stNumberInput label,
-    section[data-testid="stSidebar"] .stSlider label {
-        font-weight: 600;
+    .side-brand .big {
+        font-size: 28px;
+        font-weight: 850;
+        line-height: 1.1;
     }
 
+    .side-brand .small {
+        font-size: 12px;
+        opacity: .82;
+        margin-top: 6px;
+    }
 
-    /* ================================
-       HERO HEADER
-    ================================= */
+    .side-section {
+        font-weight: 800;
+        font-size: 15px;
+        margin: 15px 0 8px;
+    }
 
+    .side-help {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.65;
+        color: #475569 !important;
+    }
+
+    /* ---------- Hero ---------- */
     .hero {
-        background:
-            linear-gradient(
-                135deg,
-                #0f172a 0%,
-                #1e3a8a 55%,
-                #2563eb 100%
-            );
-
-        padding: 38px 42px;
-        border-radius: 24px;
-        color: white;
-        box-shadow:
-            0 15px 35px rgba(15, 23, 42, 0.18);
-
-        margin-bottom: 25px;
         position: relative;
         overflow: hidden;
+        border-radius: 26px;
+        padding: 34px 38px;
+        color: white;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(255,255,255,.17), transparent 28%),
+            radial-gradient(circle at 78% 90%, rgba(96,165,250,.24), transparent 25%),
+            linear-gradient(135deg, #0f172a 0%, #172554 50%, #2563eb 100%);
+        box-shadow: 0 18px 45px rgba(15,23,42,.16);
+        margin-bottom: 22px;
     }
 
-    .hero:before {
-        content: "";
-        position: absolute;
-        width: 250px;
-        height: 250px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.08);
-        right: -80px;
-        top: -100px;
-    }
-
-    .hero:after {
-        content: "";
-        position: absolute;
-        width: 170px;
-        height: 170px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.05);
-        right: 130px;
-        bottom: -100px;
-    }
-
-    .hero-title {
-        font-size: 42px;
-        font-weight: 800;
-        letter-spacing: -1px;
-        margin-bottom: 5px;
-    }
-
-    .hero-subtitle {
-        font-size: 19px;
-        opacity: 0.9;
-        margin-bottom: 20px;
-    }
-
-    .hero-badge {
+    .hero-kicker {
         display: inline-block;
-        padding: 7px 15px;
-        border-radius: 30px;
-        background: rgba(255,255,255,0.14);
-        border: 1px solid rgba(255,255,255,0.25);
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-
-    /* ================================
-       SECTION TITLES
-    ================================= */
-
-    .section-title {
-        font-size: 28px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.2);
+        font-size: 12px;
         font-weight: 800;
-        color: #0f172a;
-        margin-top: 10px;
-        margin-bottom: 8px;
+        letter-spacing: .7px;
+        text-transform: uppercase;
     }
 
-    .section-description {
+    .hero h1 {
+        margin: 13px 0 6px;
+        font-size: 40px;
+        line-height: 1.08;
+        letter-spacing: -.8px;
+        color: white;
+    }
+
+    .hero p {
+        margin: 0;
+        max-width: 850px;
+        font-size: 16px;
+        line-height: 1.7;
+        color: rgba(255,255,255,.84);
+    }
+
+    .hero-tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    .hero-tag {
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.16);
+        font-size: 12px;
+        font-weight: 700;
+        color: white;
+    }
+
+    /* ---------- Section ---------- */
+    .section-head {
+        margin: 24px 0 12px;
+    }
+
+    .section-head .title {
+        font-size: 25px;
+        font-weight: 850;
+        color: #111827;
+    }
+
+    .section-head .desc {
         color: #64748b;
-        font-size: 15px;
-        margin-bottom: 20px;
+        font-size: 14px;
+        margin-top: 4px;
     }
 
-
-    /* ================================
-       CARDS
-    ================================= */
-
-    .info-card {
+    /* ---------- Metric cards ---------- */
+    .metric-card {
         background: white;
+        border: 1px solid #e7eaf0;
         border-radius: 18px;
-        padding: 22px;
-        border: 1px solid #e2e8f0;
-        box-shadow:
-            0 8px 25px rgba(15, 23, 42, 0.06);
-        height: 100%;
+        padding: 18px 19px;
+        min-height: 128px;
+        box-shadow: 0 8px 24px rgba(15,23,42,.055);
     }
 
-    .info-card h3 {
-        color: #0f172a;
+    .metric-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .4px;
+    }
+
+    .metric-icon {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 17px;
+    }
+
+    .metric-value {
+        font-size: 25px;
+        font-weight: 850;
+        color: #111827;
+        margin-top: 15px;
+        white-space: nowrap;
+    }
+
+    .metric-sub {
+        color: #94a3b8;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+
+    /* ---------- White content cards ---------- */
+    .card {
+        background: white;
+        border: 1px solid #e7eaf0;
+        border-radius: 18px;
+        padding: 21px;
+        box-shadow: 0 8px 24px rgba(15,23,42,.05);
+        margin-bottom: 16px;
+    }
+
+    .card-title {
+        font-size: 18px;
+        font-weight: 850;
+        color: #111827;
         margin-bottom: 8px;
     }
 
-    .info-card p {
+    .card-desc {
         color: #64748b;
+        font-size: 13px;
         line-height: 1.7;
     }
 
-
-    /* ================================
-       RESULT CARDS
-    ================================= */
-
-    .result-card {
-        background: white;
-        border-radius: 18px;
-        padding: 22px;
-        border: 1px solid #e2e8f0;
-        box-shadow:
-            0 8px 25px rgba(15, 23, 42, 0.07);
-        min-height: 145px;
-    }
-
-    .result-label {
-        font-size: 14px;
-        color: #64748b;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-
-    .result-value {
-        font-size: 28px;
-        font-weight: 800;
-        color: #0f172a;
-    }
-
-    .result-method {
-        font-size: 13px;
-        margin-top: 6px;
-        color: #2563eb;
-        font-weight: 600;
-    }
-
-
-    /* ================================
-       STEP CARDS
-    ================================= */
-
-    .step-card {
-        background: white;
-        border-radius: 18px;
-        border: 1px solid #e2e8f0;
-        padding: 25px;
-        margin-bottom: 18px;
-        box-shadow:
-            0 7px 22px rgba(15, 23, 42, 0.05);
-    }
-
-    .step-number {
+    .formula-label {
         display: inline-block;
-        background: #2563eb;
-        color: white;
-        font-weight: 800;
-        padding: 7px 13px;
-        border-radius: 10px;
-        margin-bottom: 10px;
-    }
-
-
-    /* ================================
-       BADGES
-    ================================= */
-
-    .badge-blue {
-        display: inline-block;
-        background: #dbeafe;
+        padding: 5px 9px;
+        border-radius: 8px;
+        background: #eff6ff;
         color: #1d4ed8;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 700;
+        font-size: 11px;
+        font-weight: 850;
+        margin-bottom: 8px;
+        letter-spacing: .4px;
     }
 
-    .badge-green {
-        display: inline-block;
-        background: #dcfce7;
-        color: #15803d;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 700;
+    /* ---------- Step cards ---------- */
+    .step {
+        background: white;
+        border: 1px solid #e7eaf0;
+        border-radius: 18px;
+        padding: 20px 22px;
+        margin-bottom: 14px;
+        box-shadow: 0 8px 24px rgba(15,23,42,.045);
     }
 
+    .step-no {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 74px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: #111827;
+        color: white;
+        font-size: 11px;
+        font-weight: 850;
+        letter-spacing: .5px;
+    }
 
-    /* ================================
-       FOOTER
-    ================================= */
+    .step-title {
+        font-size: 18px;
+        font-weight: 850;
+        color: #111827;
+        margin: 10px 0 3px;
+    }
 
-    .footer {
-        text-align: center;
+    .step-note {
+        font-size: 13px;
         color: #64748b;
-        font-size: 13px;
-        padding-top: 30px;
-        padding-bottom: 10px;
     }
 
-</style>
-""", unsafe_allow_html=True)
+    /* ---------- Status / callouts ---------- */
+    .callout {
+        border-radius: 16px;
+        padding: 14px 16px;
+        margin: 10px 0 16px;
+        border: 1px solid #dbeafe;
+        background: #eff6ff;
+        color: #1e3a8a;
+        font-size: 13px;
+        line-height: 1.7;
+    }
 
+    .callout-success {
+        border-color: #bbf7d0;
+        background: #f0fdf4;
+        color: #166534;
+    }
+
+    .callout-warning {
+        border-color: #fde68a;
+        background: #fffbeb;
+        color: #92400e;
+    }
+
+    /* ---------- Table polish ---------- */
+    div[data-testid="stDataFrame"] {
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    /* ---------- Footer ---------- */
+    .footer {
+        margin-top: 30px;
+        padding: 18px;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 12px;
+    }
+
+    /* ---------- Hide default Streamlit menu/footer clutter ---------- */
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ============================================================
-# FUNCTIONS
+# MATH FUNCTIONS
 # ============================================================
-
 def f(x):
     return 1 + np.exp(x)
 
@@ -298,712 +369,437 @@ def exact_integral(a, b):
 
 
 def trapezoidal_rule(a, b, n):
-
     h = (b - a) / n
-
     x = np.linspace(a, b, n + 1)
-
     y = f(x)
-
-    return h * (
-        (y[0] + y[-1]) / 2
-        + np.sum(y[1:-1])
-    )
+    return h * ((y[0] + y[-1]) / 2 + np.sum(y[1:-1]))
 
 
 def simpsons_rule(a, b, n):
-
     if n % 2 != 0:
-        raise ValueError(
-            "Simpson's Rule requires an even n."
-        )
-
+        raise ValueError("Simpson's Rule requires an even n.")
     h = (b - a) / n
-
     x = np.linspace(a, b, n + 1)
-
     y = f(x)
-
-    odd_sum = np.sum(y[1:-1:2])
-
-    even_sum = np.sum(y[2:-1:2])
-
-    return (
-        h / 3
-        * (
-            y[0]
-            + y[-1]
-            + 4 * odd_sum
-            + 2 * even_sum
-        )
+    return (h / 3) * (
+        y[0]
+        + y[-1]
+        + 4 * np.sum(y[1:-1:2])
+        + 2 * np.sum(y[2:-1:2])
     )
-
-
-# ============================================================
-# HERO
-# ============================================================
-
-st.markdown("""
-<div class="hero">
-
-    <div class="hero-title">
-        📐 Numerical Integration Lab
-    </div>
-
-    <div class="hero-subtitle">
-        Project #3 — Comparison of Numerical Integration Approximations
-    </div>
-
-    <span class="hero-badge">
-        Trapezoidal Rule
-    </span>
-
-    <span class="hero-badge">
-        Simpson's Rule
-    </span>
-
-    <span class="hero-badge">
-        Numerical Methods
-    </span>
-
-</div>
-""", unsafe_allow_html=True)
 
 
 # ============================================================
 # SIDEBAR
 # ============================================================
-
 st.sidebar.markdown(
     """
-    <div style="
-        text-align:center;
-        padding:10px 0 20px 0;
-    ">
-        <div style="font-size:42px;">📐</div>
-        <div style="
-            font-size:22px;
-            font-weight:800;
-        ">
-            Project #3
-        </div>
-        <div style="
-            opacity:0.75;
-            font-size:13px;
-        ">
-            Numerical Integration
-        </div>
+    <div class="side-brand">
+        <div class="big">∫ Project #3</div>
+        <div class="small">Comparison of Numerical Integration Approximations</div>
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
 
-st.sidebar.markdown("### ⚙️ Input Parameters")
+st.sidebar.markdown('<div class="side-section">⚙️ Input Parameters</div>', unsafe_allow_html=True)
 
-st.sidebar.markdown(
-    "กำหนดค่าที่ใช้ในการประมาณอินทิกรัล"
-)
-
-# Widget 1
 a = st.sidebar.number_input(
-    "ค่า a — ขอบเขตล่าง",
+    "a — ขอบเขตล่าง",
     value=0.0,
     step=0.1,
-    format="%.2f"
+    format="%.2f",
 )
 
-# Widget 2
 b = st.sidebar.number_input(
-    "ค่า b — ขอบเขตบน",
+    "b — ขอบเขตบน",
     value=1.0,
     step=0.1,
-    format="%.2f"
+    format="%.2f",
 )
 
-# Widget 3
 n = st.sidebar.selectbox(
-    "จำนวนช่วง n",
-    [8, 16, 32, 64],
-    index=0
+    "n — จำนวนช่วง",
+    options=[8, 16, 32, 64],
+    index=0,
 )
 
-# Widget 4
 graph_points = st.sidebar.slider(
-    "ความละเอียดของกราฟ",
-    100,
-    1000,
-    500,
-    100
+    "ความละเอียดกราฟ",
+    min_value=200,
+    max_value=1200,
+    value=600,
+    step=100,
 )
 
 st.sidebar.markdown("---")
 
 st.sidebar.markdown(
     """
-    <div style="
-        padding:15px;
-        border-radius:14px;
-        background:rgba(255,255,255,0.10);
-    ">
-        <b>Widgets ที่ใช้</b><br><br>
-        ✓ number_input<br>
-        ✓ selectbox<br>
-        ✓ slider
+    <div class="side-help">
+        <b>Interactive Controls</b><br>
+        • number_input สำหรับ a และ b<br>
+        • selectbox สำหรับ n<br>
+        • slider สำหรับความละเอียดกราฟ<br><br>
+        <b>หมายเหตุ:</b> Simpson's Rule ต้องใช้ n เป็นจำนวนคู่
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
-
 
 # ============================================================
 # VALIDATION
 # ============================================================
-
 if b <= a:
-
-    st.error(
-        "❌ ค่า b ต้องมากกว่าค่า a"
-    )
-
+    st.error("ค่า b ต้องมากกว่าค่า a กรุณาแก้ไข Input ทางด้านซ้าย")
     st.stop()
-
 
 # ============================================================
 # CALCULATIONS
 # ============================================================
+A = exact_integral(a, b)
+AT = trapezoidal_rule(a, b, n)
+AS = simpsons_rule(a, b, n)
 
-true_value = exact_integral(a, b)
-
-trap_value = trapezoidal_rule(a, b, n)
-
-simp_value = simpsons_rule(a, b, n)
-
-trap_error = abs(
-    true_value - trap_value
-)
-
-simp_error = abs(
-    true_value - simp_value
-)
+ET = abs(A - AT)
+ES = abs(A - AS)
 
 h = (b - a) / n
 
-
 # ============================================================
-# QUICK SUMMARY
+# HERO
 # ============================================================
-
 st.markdown(
-    '<div class="section-title">📊 Calculation Overview</div>',
-    unsafe_allow_html=True
+    """
+    <div class="hero">
+        <span class="hero-kicker">Numerical Methods • Streamlit Application</span>
+        <h1>Numerical Integration Lab</h1>
+        <p>
+            Project #3 — Comparison of Numerical Integration Approximations
+            using the Trapezoidal Rule and Simpson's Rule.
+        </p>
+        <div class="hero-tags">
+            <span class="hero-tag">∫ Exact Integral</span>
+            <span class="hero-tag">Trapezoidal Rule</span>
+            <span class="hero-tag">Simpson's Rule</span>
+            <span class="hero-tag">Error Analysis</span>
+            <span class="hero-tag">Interactive Graph</span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ============================================================
+# PROBLEM SUMMARY
+# ============================================================
+st.markdown(
+    """
+    <div class="section-head">
+        <div class="title">📌 Problem & Current Input</div>
+        <div class="desc">ค่าทั้งหมดจะคำนวณและอัปเดตอัตโนมัติเมื่อเปลี่ยน Input</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
 st.markdown(
     f"""
-    <div class="section-description">
-        ผลลัพธ์จากค่าที่กำหนด
-        <b>a = {a:.2f}</b>,
-        <b>b = {b:.2f}</b>,
-        <b>n = {n}</b>
+    <div class="card">
+        <span class="formula-label">FUNCTION</span>
+        <div class="card-title">โจทย์ที่ใช้ในการคำนวณ</div>
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
+st.latex(r"A=\int_a^b(1+e^x)\,dx")
 
+# ============================================================
+# METRICS
+# ============================================================
+m1, m2, m3, m4 = st.columns(4)
 
-c1, c2, c3, c4 = st.columns(4)
-
-
-with c1:
-
+with m1:
     st.markdown(
         f"""
-        <div class="result-card">
-            <div class="result-label">
-                EXACT VALUE
-            </div>
-            <div class="result-value">
-                {true_value:.6f}
-            </div>
-            <div class="result-method">
-                A
-            </div>
+        <div class="metric-card">
+            <div class="metric-top"><span>EXACT VALUE</span><span class="metric-icon">A</span></div>
+            <div class="metric-value">{A:.6f}</div>
+            <div class="metric-sub">Analytical integral</div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
-
-with c2:
-
+with m2:
     st.markdown(
         f"""
-        <div class="result-card">
-            <div class="result-label">
-                TRAPEZOIDAL
-            </div>
-            <div class="result-value">
-                {trap_value:.6f}
-            </div>
-            <div class="result-method">
-                Ãₜ
-            </div>
+        <div class="metric-card">
+            <div class="metric-top"><span>TRAPEZOIDAL</span><span class="metric-icon">T</span></div>
+            <div class="metric-value">{AT:.6f}</div>
+            <div class="metric-sub">Ãₜ • Error {ET:.3E}</div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
-
-with c3:
-
+with m3:
     st.markdown(
         f"""
-        <div class="result-card">
-            <div class="result-label">
-                SIMPSON
-            </div>
-            <div class="result-value">
-                {simp_value:.6f}
-            </div>
-            <div class="result-method">
-                Ãₛ
-            </div>
+        <div class="metric-card">
+            <div class="metric-top"><span>SIMPSON</span><span class="metric-icon">S</span></div>
+            <div class="metric-value">{AS:.6f}</div>
+            <div class="metric-sub">Ãₛ • Error {ES:.3E}</div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
-
-with c4:
-
+with m4:
     st.markdown(
         f"""
-        <div class="result-card">
-            <div class="result-label">
-                STEP SIZE
-            </div>
-            <div class="result-value">
-                {h:.5f}
-            </div>
-            <div class="result-method">
-                h = (b-a)/n
-            </div>
+        <div class="metric-card">
+            <div class="metric-top"><span>STEP SIZE</span><span class="metric-icon">h</span></div>
+            <div class="metric-value">{h:.6f}</div>
+            <div class="metric-sub">h = (b − a) / n</div>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
-
-
-st.markdown("<br>", unsafe_allow_html=True)
-
 
 # ============================================================
 # TABS
 # ============================================================
-
-tab1, tab2, tab3, tab4, tab5 = st.tabs(
+tab_theory, tab_steps, tab_graph, tab_error, tab64 = st.tabs(
     [
         "📚 Theory",
         "🧮 Step-by-Step",
         "📈 Visualization",
         "📉 Error Analysis",
-        "🏆 n = 64"
+        "🏆 n = 64",
     ]
 )
 
-
 # ============================================================
-# TAB 1 — THEORY
+# TAB 1: THEORY
 # ============================================================
-
-with tab1:
-
+with tab_theory:
     st.markdown(
-        '<div class="section-title">📚 Mathematical Theory</div>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        '<div class="section-description">'
-        'หลักการและสูตรที่ใช้ในการประมาณค่า Numerical Integration'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-
-        st.markdown("""
-        <div class="info-card">
-
-        <span class="badge-blue">
-        FUNCTION
-        </span>
-
-        <h3>ฟังก์ชันที่กำหนด</h3>
-
+        """
+        <div class="section-head">
+            <div class="title">📚 Mathematical Theory</div>
+            <div class="desc">สูตรและหลักการที่ใช้ใน Project #3</div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
-        st.latex(
-            r"""
-            f(x)=1+e^x
+    c1, c2 = st.columns(2)
+
+    with c1:
+        st.markdown(
             """
+            <div class="card">
+                <span class="formula-label">FUNCTION</span>
+                <div class="card-title">ฟังก์ชัน</div>
+                <div class="card-desc">ฟังก์ชันที่กำหนดในโจทย์</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
+        st.latex(r"f(x)=1+e^x")
 
-    with col2:
+    with c2:
+        st.markdown(
+            """
+            <div class="card">
+                <span class="formula-label">EXACT VALUE</span>
+                <div class="card-title">ค่าจริงของอินทิกรัล</div>
+                <div class="card-desc">ใช้เป็นค่ามาตรฐานในการคำนวณ Error</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.latex(r"A=\int_a^b(1+e^x)\,dx")
+        st.latex(r"A=(b+e^b)-(a+e^a)")
 
-        st.markdown("""
-        <div class="info-card">
-
-        <span class="badge-green">
-        EXACT INTEGRAL
-        </span>
-
-        <h3>ค่าจริงของอินทิกรัล</h3>
-
+    st.markdown(
+        """
+        <div class="card">
+            <span class="formula-label">TRAPEZOIDAL RULE</span>
+            <div class="card-title">Trapezoidal Rule</div>
+            <div class="card-desc">แบ่งพื้นที่ใต้กราฟเป็นรูปสี่เหลี่ยมคางหมูจำนวน n ช่วง</div>
         </div>
-        """, unsafe_allow_html=True)
-
-        st.latex(
-            r"""
-            A=\int_a^b(1+e^x)\,dx
-            """
-        )
-
-        st.latex(
-            r"""
-            A=(b+e^b)-(a+e^a)
-            """
-        )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="info-card">
-
-    <span class="badge-blue">
-    TRAPEZOIDAL RULE
-    </span>
-
-    <h3>Trapezoidal Rule</h3>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(
-        r"""
-        h=\frac{b-a}{n}
-        """
+        """,
+        unsafe_allow_html=True,
     )
-
+    st.latex(r"h=\frac{b-a}{n}")
     st.latex(
-        r"""
-        \tilde A_T
-        =
-        h
-        \left[
-        \frac{f(a)+f(b)}{2}
-        +
-        \sum_{i=1}^{n-1}f(a+ih)
-        \right]
-        """
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="info-card">
-
-    <span class="badge-green">
-    SIMPSON'S RULE
-    </span>
-
-    <h3>Simpson's Rule</h3>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(
-        r"""
-        \tilde A_S
-        =
-        \frac{h}{3}
-        \left[
-        f(a)+f(b)
-        +
-        4\sum_{\text{odd}}f(x_i)
-        +
-        2\sum_{\text{even}}f(x_i)
-        \right]
-        """
-    )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="info-card">
-
-    <span class="badge-blue">
-    ERROR
-    </span>
-
-    <h3>การหาค่าความคลาดเคลื่อน</h3>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(
-        r"""
-        Error=|A-\tilde A|
-        """
-    )
-
-
-# ============================================================
-# TAB 2 — STEP BY STEP
-# ============================================================
-
-with tab2:
-
-    st.markdown(
-        '<div class="section-title">🧮 Step-by-Step Calculation</div>',
-        unsafe_allow_html=True
+        r"\tilde A_T=h\left[\frac{f(a)+f(b)}{2}+\sum_{i=1}^{n-1}f(a+ih)\right]"
     )
 
     st.markdown(
-        '<div class="section-description">'
-        'แสดงขั้นตอนการคำนวณตั้งแต่การหาค่า h จนถึง Error'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-    # STEP 1
-    st.markdown("""
-    <div class="step-card">
-
-    <span class="step-number">
-    STEP 01
-    </span>
-
-    <h3>กำหนดค่า Step Size</h3>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(
-        rf"""
-        h=\frac{{b-a}}{{n}}
-        =
-        \frac{{{b:.2f}-{a:.2f}}}{{{n}}}
-        =
-        {h:.10f}
         """
+        <div class="card">
+            <span class="formula-label">SIMPSON'S RULE</span>
+            <div class="card-title">Simpson's Rule</div>
+            <div class="card-desc">ใช้พาราโบลาประมาณช่วงของฟังก์ชัน และต้องใช้ n เป็นจำนวนคู่</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-
-    # STEP 2
-    st.markdown("""
-    <div class="step-card">
-
-    <span class="step-number">
-    STEP 02
-    </span>
-
-    <h3>หาค่า Exact Integral</h3>
-
-    </div>
-    """, unsafe_allow_html=True)
-
     st.latex(
-        r"""
-        A=(b+e^b)-(a+e^a)
-        """
-    )
-
-    st.latex(
-        rf"""
-        A=({b:.2f}+e^{{{b:.2f}}})
-        -
-        ({a:.2f}+e^{{{a:.2f}}})
-        """
-    )
-
-    st.latex(
-        rf"""
-        \boxed{{A={true_value:.10f}}}
-        """
-    )
-
-    # STEP 3
-    x_values = np.linspace(a, b, n + 1)
-    y_values = f(x_values)
-
-    interior_sum = np.sum(
-        y_values[1:-1]
-    )
-
-    st.markdown("""
-    <div class="step-card">
-
-    <span class="step-number">
-    STEP 03
-    </span>
-
-    <h3>Trapezoidal Rule</h3>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(
-        r"""
-        \tilde A_T
-        =
-        h
-        \left[
-        \frac{f(a)+f(b)}{2}
-        +
-        \sum_{i=1}^{n-1}f(x_i)
-        \right]
-        """
-    )
-
-    st.write(
-        f"ผลรวมจุดภายใน = {interior_sum:.10f}"
-    )
-
-    st.latex(
-        rf"""
-        \tilde A_T
-        =
-        {h:.10f}
-        \left[
-        \frac{{{y_values[0]:.10f}+{y_values[-1]:.10f}}}{{2}}
-        +
-        {interior_sum:.10f}
-        \right]
-        """
-    )
-
-    st.latex(
-        rf"""
-        \boxed{{\tilde A_T={trap_value:.10f}}}
-        """
-    )
-
-    st.latex(
-        rf"""
-        Error_T
-        =
-        |{true_value:.10f}-{trap_value:.10f}|
-        =
-        {trap_error:.5E}
-        """
-    )
-
-    # STEP 4
-    odd_sum = np.sum(
-        y_values[1:-1:2]
-    )
-
-    even_sum = np.sum(
-        y_values[2:-1:2]
-    )
-
-    st.markdown("""
-    <div class="step-card">
-
-    <span class="step-number">
-    STEP 04
-    </span>
-
-    <h3>Simpson's Rule</h3>
-
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.latex(
-        r"""
-        \tilde A_S
-        =
-        \frac{h}{3}
-        [
-        f(a)+f(b)
-        +4\sum_{\text{odd}}f(x_i)
-        +2\sum_{\text{even}}f(x_i)
-        ]
-        """
-    )
-
-    st.write(
-        f"ผลรวมตำแหน่งคี่ = {odd_sum:.10f}"
-    )
-
-    st.write(
-        f"ผลรวมตำแหน่งคู่ = {even_sum:.10f}"
-    )
-
-    st.latex(
-        rf"""
-        \tilde A_S
-        =
-        \frac{{{h:.10f}}}{{3}}
-        [
-        {y_values[0]:.10f}
-        +
-        {y_values[-1]:.10f}
-        +
-        4({odd_sum:.10f})
-        +
-        2({even_sum:.10f})
-        ]
-        """
-    )
-
-    st.latex(
-        rf"""
-        \boxed{{\tilde A_S={simp_value:.10f}}}
-        """
-    )
-
-    st.latex(
-        rf"""
-        Error_S
-        =
-        |{true_value:.10f}-{simp_value:.10f}|
-        =
-        {simp_error:.5E}
-        """
-    )
-
-
-# ============================================================
-# TAB 3 — VISUALIZATION
-# ============================================================
-
-with tab3:
-
-    st.markdown(
-        '<div class="section-title">📈 Interactive Visualization</div>',
-        unsafe_allow_html=True
+        r"\tilde A_S=\frac{h}{3}\left[f(a)+f(b)+4\sum_{\mathrm{odd}}f(x_i)+2\sum_{\mathrm{even}}f(x_i)\right]"
     )
 
     st.markdown(
-        '<div class="section-description">'
-        'กราฟจะเปลี่ยนแปลงอัตโนมัติตามค่า a และ b ที่ผู้ใช้กำหนด'
-        '</div>',
-        unsafe_allow_html=True
+        """
+        <div class="card">
+            <span class="formula-label">ERROR</span>
+            <div class="card-title">Absolute Error</div>
+            <div class="card-desc">วัดความแตกต่างระหว่างค่าจริงกับค่าประมาณ</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.latex(r"Error=\left|A-\tilde A\right|")
+
+# ============================================================
+# TAB 2: STEP BY STEP
+# ============================================================
+with tab_steps:
+    st.markdown(
+        """
+        <div class="section-head">
+            <div class="title">🧮 Step-by-Step Calculation</div>
+            <div class="desc">แสดงวิธีทำจาก Input ปัจจุบันแบบเป็นขั้นตอน</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    x_plot = np.linspace(
-        a,
-        b,
-        graph_points
+    st.markdown(
+        f"""
+        <div class="callout">
+            <b>Current Input:</b>
+            a = {a:.2f} &nbsp; | &nbsp; b = {b:.2f} &nbsp; | &nbsp; n = {n}
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
+    # Step 1
+    st.markdown(
+        """
+        <div class="step">
+            <span class="step-no">STEP 01</span>
+            <div class="step-title">หา Step Size (h)</div>
+            <div class="step-note">แบ่งช่วง [a,b] ออกเป็น n ส่วนเท่า ๆ กัน</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.latex(r"h=\frac{b-a}{n}")
+    st.latex(rf"h=\frac{{{b:.2f}-{a:.2f}}}{{{n}}}={h:.10f}")
+
+    # Step 2
+    st.markdown(
+        """
+        <div class="step">
+            <span class="step-no">STEP 02</span>
+            <div class="step-title">หา Exact Integral</div>
+            <div class="step-note">คำนวณค่าจริงเพื่อใช้เป็นค่ามาตรฐาน</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.latex(r"A=(b+e^b)-(a+e^a)")
+    st.latex(
+        rf"A=({b:.2f}+e^{{{b:.2f}}})-({a:.2f}+e^{{{a:.2f}}})"
+    )
+    st.latex(rf"\boxed{{A={A:.10f}}}")
+
+    # Step 3
+    x = np.linspace(a, b, n + 1)
+    y = f(x)
+    interior_sum = np.sum(y[1:-1])
+
+    st.markdown(
+        """
+        <div class="step">
+            <span class="step-no">STEP 03</span>
+            <div class="step-title">Trapezoidal Rule</div>
+            <div class="step-note">ใช้ค่าที่จุดปลายและจุดภายในทุกจุด</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.latex(
+        r"\tilde A_T=h\left[\frac{f(a)+f(b)}{2}+\sum_{i=1}^{n-1}f(x_i)\right]"
+    )
+    st.write(f"ผลรวมค่าภายใน = {interior_sum:.10f}")
+    st.latex(
+        rf"\tilde A_T={h:.10f}\left[\frac{{{y[0]:.10f}+{y[-1]:.10f}}}{{2}}+{interior_sum:.10f}\right]"
+    )
+    st.latex(rf"\boxed{{\tilde A_T={AT:.10f}}}")
+    st.latex(rf"Error_T=|A-\tilde A_T|={ET:.5E}")
+
+    # Step 4
+    odd_sum = np.sum(y[1:-1:2])
+    even_sum = np.sum(y[2:-1:2])
+
+    st.markdown(
+        """
+        <div class="step">
+            <span class="step-no">STEP 04</span>
+            <div class="step-title">Simpson's Rule</div>
+            <div class="step-note">แยกผลรวมจุดคี่และจุดคู่ แล้วแทนในสูตร Simpson</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.latex(
+        r"\tilde A_S=\frac{h}{3}\left[f(a)+f(b)+4\sum_{\mathrm{odd}}f(x_i)+2\sum_{\mathrm{even}}f(x_i)\right]"
+    )
+    st.write(f"ผลรวมจุดคี่ = {odd_sum:.10f}")
+    st.write(f"ผลรวมจุดคู่ = {even_sum:.10f}")
+    st.latex(
+        rf"\tilde A_S=\frac{{{h:.10f}}}{{3}}\left[{y[0]:.10f}+{y[-1]:.10f}+4({odd_sum:.10f})+2({even_sum:.10f})\right]"
+    )
+    st.latex(rf"\boxed{{\tilde A_S={AS:.10f}}}")
+    st.latex(rf"Error_S=|A-\tilde A_S|={ES:.5E}")
+
+# ============================================================
+# TAB 3: VISUALIZATION
+# ============================================================
+with tab_graph:
+    st.markdown(
+        """
+        <div class="section-head">
+            <div class="title">📈 Interactive Visualization</div>
+            <div class="desc">กราฟเปลี่ยนตาม a, b และความละเอียดที่เลือกจาก Sidebar</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    x_plot = np.linspace(a, b, graph_points)
     y_plot = f(x_plot)
 
     fig = go.Figure()
+
+    # Area
+    fig.add_trace(
+        go.Scatter(
+            x=np.concatenate([x_plot, x_plot[::-1]]),
+            y=np.concatenate([y_plot, np.zeros_like(y_plot)]),
+            fill="toself",
+            fillcolor="rgba(37,99,235,0.13)",
+            line=dict(color="rgba(0,0,0,0)"),
+            hoverinfo="skip",
+            name="Area under curve",
+        )
+    )
 
     # Function
     fig.add_trace(
@@ -1011,336 +807,136 @@ with tab3:
             x=x_plot,
             y=y_plot,
             mode="lines",
+            line=dict(color="#2563eb", width=4),
             name="f(x) = 1 + eˣ",
-            line=dict(
-                width=4
-            )
         )
     )
 
-    # Area
+    # Numerical points
     fig.add_trace(
         go.Scatter(
-            x=np.concatenate(
-                [x_plot, x_plot[::-1]]
+            x=x,
+            y=y,
+            mode="markers",
+            marker=dict(
+                size=7,
+                color="#111827",
+                line=dict(color="white", width=1),
             ),
-            y=np.concatenate(
-                [
-                    y_plot,
-                    np.zeros_like(y_plot)
-                ]
-            ),
-            fill="toself",
-            mode="none",
-            name="Area"
+            name=f"n = {n} points",
         )
     )
 
     fig.add_vline(
         x=a,
         line_dash="dash",
-        annotation_text=f"a = {a:.2f}"
+        line_color="#16a34a",
+        annotation_text=f"a = {a:.2f}",
+        annotation_position="top left",
     )
 
     fig.add_vline(
         x=b,
         line_dash="dash",
-        annotation_text=f"b = {b:.2f}"
+        line_color="#dc2626",
+        annotation_text=f"b = {b:.2f}",
+        annotation_position="top right",
     )
 
     fig.update_layout(
-        title={
-            "text": "Area Under f(x) = 1 + eˣ",
-            "font": {
-                "size": 22
-            }
-        },
-        xaxis_title="x",
-        yaxis_title="f(x)",
-        template="plotly_white",
-        height=580,
-        margin=dict(
-            l=40,
-            r=40,
-            t=70,
-            b=40
+        title=dict(
+            text="Area Under the Curve: f(x) = 1 + eˣ",
+            font=dict(size=22, color="#111827"),
         ),
-        hovermode="x unified"
+        xaxis=dict(
+            title="x",
+            gridcolor="#e5e7eb",
+            zerolinecolor="#cbd5e1",
+        ),
+        yaxis=dict(
+            title="f(x)",
+            gridcolor="#e5e7eb",
+            zerolinecolor="#cbd5e1",
+        ),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        height=600,
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0,
+        ),
+        margin=dict(l=50, r=30, t=90, b=50),
     )
 
-    st.plotly_chart(
-        fig,
-        use_container_width=True
-    )
+    st.plotly_chart(fig, use_container_width=True)
 
-    c1, c2, c3 = st.columns(3)
+    g1, g2, g3 = st.columns(3)
 
-    with c1:
-        st.metric(
-            "Lower Bound",
-            f"{a:.2f}"
-        )
+    with g1:
+        st.metric("Lower Bound (a)", f"{a:.2f}")
 
-    with c2:
-        st.metric(
-            "Upper Bound",
-            f"{b:.2f}"
-        )
+    with g2:
+        st.metric("Upper Bound (b)", f"{b:.2f}")
 
-    with c3:
-        st.metric(
-            "Exact Area",
-            f"{true_value:.6f}"
-        )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # --------------------------------------------------------
-    # Additional Media / Illustration
-    # --------------------------------------------------------
+    with g3:
+        st.metric("Area A", f"{A:.6f}")
 
     st.markdown(
-        '<div class="section-title">🖼️ Mathematical Illustration</div>',
-        unsafe_allow_html=True
+        """
+        <div class="callout callout-success">
+            <b>Graph elements:</b>
+            เส้นฟังก์ชัน • พื้นที่ใต้กราฟ • จุดแบ่ง n ช่วง • ขอบเขต a และ b
+            และข้อมูลแบบ Interactive เมื่อเลื่อนเมาส์บนกราฟ
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-
-    fig2, ax = plt.subplots(
-        figsize=(11, 4.5)
-    )
-
-    x_img = np.linspace(
-        a,
-        b,
-        400
-    )
-
-    y_img = f(x_img)
-
-    ax.plot(
-        x_img,
-        y_img,
-        linewidth=3,
-        label="f(x) = 1 + e^x"
-    )
-
-    ax.fill_between(
-        x_img,
-        y_img,
-        alpha=0.20
-    )
-
-    ax.axvline(
-        a,
-        linestyle="--",
-        linewidth=1.5
-    )
-
-    ax.axvline(
-        b,
-        linestyle="--",
-        linewidth=1.5
-    )
-
-    ax.set_title(
-        "Numerical Integration Illustration",
-        fontsize=16,
-        fontweight="bold"
-    )
-
-    ax.set_xlabel(
-        "x",
-        fontsize=12
-    )
-
-    ax.set_ylabel(
-        "f(x)",
-        fontsize=12
-    )
-
-    ax.grid(
-        alpha=0.2
-    )
-
-    ax.legend()
-
-    fig2.tight_layout()
-
-    st.pyplot(
-        fig2,
-        use_container_width=True
-    )
-
-    plt.close(fig2)
-
 
 # ============================================================
-# TAB 4 — ERROR ANALYSIS
+# TAB 4: ERROR ANALYSIS
 # ============================================================
-
-with tab4:
-
+with tab_error:
     st.markdown(
-        '<div class="section-title">📉 Error Analysis</div>',
-        unsafe_allow_html=True
+        """
+        <div class="section-head">
+            <div class="title">📉 Error Analysis</div>
+            <div class="desc">เปรียบเทียบ Error สำหรับ n = 8, 16, 32 และ 64</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    st.markdown(
-        '<div class="section-description">'
-        'เปรียบเทียบค่าความคลาดเคลื่อนของทั้งสองวิธี '
-        'เมื่อ n = 8, 16, 32 และ 64'
-        '</div>',
-        unsafe_allow_html=True
-    )
-
-    n_values = [
-        8,
-        16,
-        32,
-        64
-    ]
-
+    n_values = [8, 16, 32, 64]
     rows = []
 
-    for n_i in n_values:
-
-        trap_i = trapezoidal_rule(
-            a,
-            b,
-            n_i
-        )
-
-        simp_i = simpsons_rule(
-            a,
-            b,
-            n_i
-        )
-
+    for ni in n_values:
+        ti = trapezoidal_rule(a, b, ni)
+        si = simpsons_rule(a, b, ni)
         rows.append(
             {
-                "n": n_i,
-                "Trapezoidal Error":
-                    abs(true_value - trap_i),
-                "Simpson Error":
-                    abs(true_value - simp_i)
+                "n": ni,
+                "A": A,
+                "Trapezoidal": ti,
+                "Error (Trapezoidal)": abs(A - ti),
+                "Simpson": si,
+                "Error (Simpson)": abs(A - si),
             }
         )
 
-    error_df = pd.DataFrame(rows)
+    result_df = pd.DataFrame(rows)
 
-    # TABLE
     st.markdown(
-        "### 📋 Error Table"
-    )
-
-    st.dataframe(
-        error_df.style.format(
-            {
-                "Trapezoidal Error":
-                    "{:.5E}",
-                "Simpson Error":
-                    "{:.5E}"
-            }
-        ),
-        use_container_width=True,
-        hide_index=True
-    )
-
-    # ERROR GRAPH
-    st.markdown(
-        "### 📊 n vs Error"
-    )
-
-    error_fig = go.Figure()
-
-    error_fig.add_trace(
-        go.Scatter(
-            x=error_df["n"],
-            y=error_df["Trapezoidal Error"],
-            mode="lines+markers",
-            name="Trapezoidal",
-            line=dict(
-                width=3
-            ),
-            marker=dict(
-                size=9
-            )
-        )
-    )
-
-    error_fig.add_trace(
-        go.Scatter(
-            x=error_df["n"],
-            y=error_df["Simpson Error"],
-            mode="lines+markers",
-            name="Simpson",
-            line=dict(
-                width=3
-            ),
-            marker=dict(
-                size=9
-            )
-        )
-    )
-
-    error_fig.update_layout(
-        title="Error Comparison",
-        xaxis_title="Number of intervals (n)",
-        yaxis_title="Error",
-        yaxis_type="log",
-        template="plotly_white",
-        height=520,
-        hovermode="x unified"
-    )
-
-    st.plotly_chart(
-        error_fig,
-        use_container_width=True
-    )
-
-    st.info(
-        "ใช้ Logarithmic Scale ที่แกน Error "
-        "เพื่อให้สามารถมองเห็นความแตกต่างของ Error "
-        "ระหว่าง Trapezoidal และ Simpson ได้ชัดเจน"
-    )
-
-    # FULL RESULT TABLE
-    st.markdown(
-        "### 📑 Numerical Results"
-    )
-
-    result_rows = []
-
-    for n_i in n_values:
-
-        trap_i = trapezoidal_rule(
-            a,
-            b,
-            n_i
-        )
-
-        simp_i = simpsons_rule(
-            a,
-            b,
-            n_i
-        )
-
-        result_rows.append(
-            {
-                "n": n_i,
-                "A": true_value,
-                "Trapezoidal":
-                    trap_i,
-                "Error (Trap.)":
-                    abs(true_value - trap_i),
-                "Simpson":
-                    simp_i,
-                "Error (Simp.)":
-                    abs(true_value - simp_i)
-            }
-        )
-
-    result_df = pd.DataFrame(
-        result_rows
+        """
+        <div class="card">
+            <div class="card-title">📋 Numerical Results</div>
+            <div class="card-desc">ตารางผลลัพธ์และ Error ของทั้งสองวิธี</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     st.dataframe(
@@ -1348,156 +944,168 @@ with tab4:
             {
                 "A": "{:.6f}",
                 "Trapezoidal": "{:.6f}",
-                "Error (Trap.)": "{:.5E}",
+                "Error (Trapezoidal)": "{:.5E}",
                 "Simpson": "{:.6f}",
-                "Error (Simp.)": "{:.5E}"
+                "Error (Simpson)": "{:.5E}",
             }
         ),
         use_container_width=True,
-        hide_index=True
+        hide_index=True,
     )
 
+    # Error chart
+    error_fig = go.Figure()
 
-# ============================================================
-# TAB 5 — N = 64
-# ============================================================
+    error_fig.add_trace(
+        go.Scatter(
+            x=n_values,
+            y=result_df["Error (Trapezoidal)"],
+            mode="lines+markers",
+            name="Trapezoidal Error",
+            line=dict(color="#2563eb", width=3),
+            marker=dict(size=9),
+        )
+    )
 
-with tab5:
+    error_fig.add_trace(
+        go.Scatter(
+            x=n_values,
+            y=result_df["Error (Simpson)"],
+            mode="lines+markers",
+            name="Simpson Error",
+            line=dict(color="#dc2626", width=3),
+            marker=dict(size=9),
+        )
+    )
+
+    error_fig.update_layout(
+        title=dict(
+            text="Comparison of Absolute Error",
+            font=dict(size=21, color="#111827"),
+        ),
+        xaxis=dict(
+            title="Number of intervals (n)",
+            type="category",
+            gridcolor="#e5e7eb",
+        ),
+        yaxis=dict(
+            title="Absolute Error",
+            type="log",
+            gridcolor="#e5e7eb",
+        ),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        height=540,
+        hovermode="x unified",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0,
+        ),
+        margin=dict(l=50, r=30, t=90, b=50),
+    )
+
+    st.plotly_chart(error_fig, use_container_width=True)
 
     st.markdown(
-        '<div class="section-title">🏆 Comparison when n = 64</div>',
-        unsafe_allow_html=True
+        """
+        <div class="callout">
+            <b>Why log scale?</b><br>
+            ใช้ logarithmic scale ที่แกน Error เพื่อให้มองเห็นความแตกต่างของ
+            Error ที่มีขนาดต่างกันมากได้ชัดเจน
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
+# ============================================================
+# TAB 5: N = 64
+# ============================================================
+with tab64:
     st.markdown(
-        '<div class="section-description">'
-        'เปรียบเทียบ Trapezoidal และ Simpson โดยกำหนด n = 64 '
-        'ตามโจทย์ Project #3'
-        '</div>',
-        unsafe_allow_html=True
+        """
+        <div class="section-head">
+            <div class="title">🏆 Final Comparison — n = 64</div>
+            <div class="desc">ตารางสรุปในรูปแบบเดียวกับ Output ที่ระบุในโจทย์</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
-    n64 = 64
+    trap64 = trapezoidal_rule(a, b, 64)
+    simp64 = simpsons_rule(a, b, 64)
+    trap64_error = abs(A - trap64)
+    simp64_error = abs(A - simp64)
 
-    trap64 = trapezoidal_rule(
-        a,
-        b,
-        n64
-    )
-
-    simp64 = simpsons_rule(
-        a,
-        b,
-        n64
-    )
-
-    trap64_error = abs(
-        true_value - trap64
-    )
-
-    simp64_error = abs(
-        true_value - simp64
-    )
-
-    # RESULT CARDS
-
-    c1, c2, c3 = st.columns(3)
-
-    with c1:
-
-        st.metric(
-            "Exact Value A",
-            f"{true_value:.6f}"
-        )
-
-    with c2:
-
-        st.metric(
-            "Trapezoidal Error",
-            f"{trap64_error:.5E}"
-        )
-
-    with c3:
-
-        st.metric(
-            "Simpson Error",
-            f"{simp64_error:.5E}"
-        )
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # TABLE
-
-    comparison_df = pd.DataFrame(
+    final_df = pd.DataFrame(
         {
-            "Method": [
-                "Trapezoidal",
-                "Simpson"
-            ],
-            "A": [
-                true_value,
-                true_value
-            ],
-            "A_tilde": [
-                trap64,
-                simp64
-            ],
-            "Error = |A - A_tilde|": [
-                trap64_error,
-                simp64_error
-            ]
+            "Method": ["Trapezoidal", "Simpson"],
+            "A": [A, A],
+            "Ã": [trap64, simp64],
+            "Error = |A − Ã|": [trap64_error, simp64_error],
         }
     )
 
-    st.markdown(
-        "### 📋 Comparison Table"
-    )
-
     st.dataframe(
-        comparison_df.style.format(
+        final_df.style.format(
             {
                 "A": "{:.6f}",
-                "A_tilde": "{:.6f}",
-                "Error = |A - A_tilde|":
-                    "{:.5E}"
+                "Ã": "{:.6f}",
+                "Error = |A − Ã|": "{:.5E}",
             }
         ),
         use_container_width=True,
-        hide_index=True
+        hide_index=True,
     )
 
-    # EXACT ASSIGNMENT OUTPUT
-
-    st.markdown(
-        "### 💻 Output Format"
-    )
+    st.markdown("### 💻 Output Format")
 
     st.code(
-        f"""
-Method          A_tilde       Error A
+        f"""Method          A_tilde       Error A
 -----------------------------------------
 Trapezoidal     {trap64:.6f}    {trap64_error:.5E}
-Simpson         {simp64:.6f}    {simp64_error:.5E}
-""",
-        language="text"
+Simpson         {simp64:.6f}    {simp64_error:.5E}""",
+        language="text",
     )
 
+    st.markdown(
+        """
+        <div class="callout callout-success">
+            <b>Project output completed:</b>
+            Exact value, approximation values and absolute errors
+            are displayed for n = 64.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ============================================================
 # FOOTER
 # ============================================================
-
 st.markdown(
     """
     <div class="footer">
-
-        <b>Project #3 — Numerical Integration</b><br>
-
-        Trapezoidal Rule • Simpson's Rule • Error Analysis<br>
-
-        Numerical Methods / Streamlit Application
-
+        <b>Project #3 — Comparison of Numerical Integration Approximations</b><br>
+        Streamlit • Numerical Methods • Trapezoidal Rule • Simpson's Rule
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
+'''
+
+requirements = """streamlit
+numpy
+pandas
+plotly
+"""
+
+base = Path("/mnt/data")
+app_path = base / "app.py"
+req_path = base / "requirements.txt"
+
+app_path.write_text(app_code, encoding="utf-8")
+req_path.write_text(requirements, encoding="utf-8")
+
+print(f"สร้างไฟล์เรียบร้อย:\n- {app_path}\n- {req_path}")
