@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS ตกแต่งแท็บและกล่องใส่ชื่อกลุ่ม
+# Custom CSS ตกแต่งแท็บและกล่องข้อความชื่อกลุ่ม
 st.markdown("""
 <style>
     .stTabs [data-baseweb="tab-list"] { gap: 10px; }
@@ -26,14 +26,13 @@ st.markdown("""
         background-color: #1f77b4 !important;
         color: white !important;
     }
-    /* สไตล์สำหรับกล่องแสดงชื่อกลุ่ม */
+    /* สไตล์กล่องแสดงชื่อกลุ่มบนหน้าหลัก */
     .group-box {
         background-color: #e8f4f8;
         border-left: 5px solid #1f77b4;
         padding: 12px 20px;
         border-radius: 5px;
         margin-bottom: 20px;
-        font-weight: bold;
         color: #0f4c81;
     }
 </style>
@@ -63,17 +62,19 @@ def simpsons_rule(a, b, n):
     return integration, x, y, h
 
 # ==========================================
-# SIDEBAR (Technical Requirement 1 & 5)
+# SIDEBAR (แปะข้อความชื่อผู้จัดทำใน Sidebar)
 # ==========================================
 st.sidebar.title("👥 ข้อมูลผู้จัดทำ")
 
 # --------------------------------------------------------------------------
-# [จุดที่ 1] ช่องกรอกชื่อกลุ่ม / สมาชิก (เปลี่ยนข้อความใน value="...")
+# [จุดที่ 1] แก้ไขข้อความรายชื่อกลุ่มตรงนี้ได้เลย ( Sidebar )
 # --------------------------------------------------------------------------
-group_name = st.sidebar.text_input(
-    "ชื่อกลุ่ม / สมาชิกผู้จัดทำ:",
-    value="กลุ่มที่ XX : นายกะปิ ใจดี (65xxxxxxxx), นายสมชาย รักเรียน (65xxxxxxxx)"
-)
+st.sidebar.markdown("""
+*กลุ่มที่:* 3  
+*สมาชิกผู้จัดทำ:*
+1. นายกิตติศักดิ์ ชัยชนะ (65012345)
+2. นายธนพล สุขใจ (65012346)
+""")
 st.sidebar.markdown("---")
 
 st.sidebar.title("⚙️ ตั้งค่าพารามิเตอร์ (Inputs)")
@@ -95,10 +96,14 @@ simp_val, x_simp, y_simp, h_simp = simpsons_rule(a, b, n)
 st.title("Project 3: Comparison of Numerical Integration Approximations")
 
 # --------------------------------------------------------------------------
-# [จุดที่ 2] แสดงกล่องข้อความชื่อกลุ่มบนหน้าหลักแบบเด่นชัด
+# [จุดที่ 2] แก้ไขข้อความรายชื่อกลุ่มตรงนี้ได้เลย ( หน้าหลัก )
 # --------------------------------------------------------------------------
-if group_name:
-    st.markdown(f'<div class="group-box">📌 ผู้จัดทำ: {group_name}</div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="group-box">
+    <b>📌 ผู้จัดทำ (กลุ่มที่ 3):</b><br>
+    • นายกิตติศักดิ์ ชัยชนะ (65012345) &nbsp;&nbsp;|&nbsp;&nbsp; • นายธนพล สุขใจ (65012346)
+</div>
+""", unsafe_allow_html=True)
 
 st.caption(f"ประมาณค่าอินทิเกรตของ f(x) = √(1 + eⁿ) จาก a = {a} ถึง b = {b}")
 
