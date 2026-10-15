@@ -107,4 +107,4 @@ with tab1:
         st.subheader("1. Trapezoidal Rule")
         st.write("ประมาณค่าด้วยรูปสี่เหลี่ยมคางหมู:")
         st.latex(r"\int_{a}^{b} f(x) \, dx \approx \frac{h}{2} \left[ f(x_0) + 2\sum_{i=1}^{n-1} f(x_i) + f(x_n) \right]")
-        st.latex(r"h = \frac{b - a}{n
+        st.latex(r"h = \frac{b - a}{n}")
