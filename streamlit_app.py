@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS ตกแต่ง Card, Tabs และ UI
+# Custom CSS ตกแต่ง Tabs และ UI
 st.markdown("""
 <style>
     /* ปรับแต่ง Tabs */
@@ -29,17 +29,6 @@ st.markdown("""
     .stTabs [aria-selected="true"] {
         background-color: #1f77b4 !important;
         color: white !important;
-    }
-    
-    /* กล่องแสดงชื่อกลุ่ม */
-    .group-box {
-        background-color: #e8f4f8;
-        border-left: 5px solid #1f77b4;
-        padding: 14px 20px;
-        border-radius: 6px;
-        margin-bottom: 20px;
-        color: #0f4c81;
-        font-size: 15px;
     }
     
     /* การ์ดเน้นข้อความ */
@@ -77,13 +66,27 @@ def simpsons_rule(a, b, n):
     return integration, x, y, h
 
 # ==========================================
-# SIDEBAR (Layout Requirement #5 & Input Controls #1)
+# SIDEBAR (ตั้งค่าพารามิเตอร์ขึ้นก่อน)
 # ==========================================
-st.sidebar.title("👥 ข้อมูลผู้จัดทำ")
+st.sidebar.title("⚙️ ตั้งค่าพารามิเตอร์ (Inputs)")
+
+# Interactive Controls
+a = st.sidebar.number_input("📌 ขอบเขตล่าง (a):", value=0.0, step=0.1)
+b = st.sidebar.number_input("📌 ขอบเขตบน (b):", value=2.0, step=0.1)
+n = st.sidebar.select_slider("🔢 จำนวนช่วงแบ่ง (n):", options=[8, 16, 32, 64], value=64)
+method_choice = st.sidebar.selectbox("📈 เลือกวิธีแสดงผลกราฟ:", ["Trapezoidal Rule", "Simpson's Rule"])
+
+# คำนวณค่าจริง Exact Value ด้วย scipy.integrate.quad
+exact_val, _ = quad(f, a, b)
+trap_val, x_trap, y_trap, h_trap = trapezoidal_rule(a, b, n)
+simp_val, x_simp, y_simp, h_simp = simpsons_rule(a, b, n)
+
+st.sidebar.markdown("---")
 
 # --------------------------------------------------------------------------
-# [จุดที่ 1] แก้ไขข้อความรายชื่อกลุ่มตรงนี้ได้เลย ( Sidebar )
+# ข้อมูลผู้จัดทำ (ย้ายมาไว้ด้านล่างสุดของ Sidebar)
 # --------------------------------------------------------------------------
+st.sidebar.title("👥 ข้อมูลผู้จัดทำ")
 st.sidebar.markdown("""
 <div style="background-color: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
     <b>กลุ่มที่:</b> 3<br>
@@ -93,36 +96,14 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-st.sidebar.markdown("---")
-st.sidebar.title("⚙️ ตั้งค่าพารามิเตอร์")
-
-# Requirement #1: Streamlit Widgets (>= 3 ชนิด: number_input, select_slider, selectbox)
-a = st.sidebar.number_input("📌 ขอบเขตล่าง (a):", value=0.0, step=0.1)
-b = st.sidebar.number_input("📌 ขอบเขตบน (b):", value=2.0, step=0.1)
-n = st.sidebar.select_slider("🔢 จำนวนช่วงแบ่ง (n):", options=[8, 16, 32, 64], value=64)
-method_choice = st.sidebar.selectbox("📈 วิธีแสดงผลบนกราฟ:", ["Trapezoidal Rule", "Simpson's Rule"])
-
-# คำนวณค่าจริง Exact Value ด้วย scipy.integrate.quad
-exact_val, _ = quad(f, a, b)
-trap_val, x_trap, y_trap, h_trap = trapezoidal_rule(a, b, n)
-simp_val, x_simp, y_simp, h_simp = simpsons_rule(a, b, n)
 
 # ==========================================
 # MAIN CONTENT
 # ==========================================
 st.title("Project 3: Comparison of Numerical Integration Approximations")
 
-# --------------------------------------------------------------------------
-# [จุดที่ 2] รายชื่อกลุ่มบนหน้าหลัก
-# --------------------------------------------------------------------------
-st.markdown("""
-<div class="group-box">
-    <b>📌 ผู้จัดทำ (กลุ่มที่ 3):</b><br>
-    • นายกิตติศักดิ์ ชัยชนะ (65012345) &nbsp;&nbsp;|&nbsp;&nbsp; • นายธนพล สุขใจ (65012346)
-</div>
-""", unsafe_allow_html=True)
+st.caption(f"ประมาณค่าอินทิเกรตของ f(x) = √(1 + eˣ) จาก a = {a} ถึง b = {b}")
 
-# Requirement #5: Layout Organization ด้วย st.tabs
 tab1, tab2, tab3 = st.tabs([
     "📚 1. ทฤษฎี (Theory)", 
     "📊 2. ตัวจำลอง (Simulation & Graph)", 
@@ -130,13 +111,12 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # ------------------------------------------
-# TAB 1: Theory (Mathematical Notation #2)
+# TAB 1: Theory
 # ------------------------------------------
 with tab1:
     st.header("📖 ทฤษฎีการประมาณค่าการอินทิเกรตทางตัวเลข")
     st.write("โจทย์กำหนดให้ประมาณค่าการอินทิเกรตของฟังก์ชัน:")
     
-    # Requirement #2: st.latex
     st.latex(r"A = \int_{a}^{b} \sqrt{1 + e^x} \, dx")
     
     col1, col2 = st.columns(2)
@@ -157,12 +137,11 @@ with tab1:
         st.markdown("</div>", unsafe_allow_html=True)
 
 # ------------------------------------------
-# TAB 2: Dynamic Visualization (Requirement #3)
+# TAB 2: Dynamic Visualization
 # ------------------------------------------
 with tab2:
     st.header("📊 กราฟจำลองพื้นที่และการแสดงผลคำนวณ")
     
-    # Requirement #4: st.metric
     m1, m2, m3 = st.columns(3)
     m1.metric("🎯 ค่าจริง (Exact Value A)", f"{exact_val:.6f}")
     m2.metric("📐 Trapezoidal Approx.", f"{trap_val:.6f}", f"Error: {abs(exact_val - trap_val):.2e}", delta_color="inverse")
@@ -170,7 +149,6 @@ with tab2:
     
     st.markdown("---")
     
-    # Requirement #3: Plotly Dynamic Graph
     x_dense = np.linspace(a - 0.1 if a < b else b - 0.1, b + 0.1 if b > a else a + 0.1, 300)
     y_dense = f(x_dense)
     
@@ -216,12 +194,11 @@ with tab2:
     st.plotly_chart(fig, use_container_width=True)
 
 # ------------------------------------------
-# TAB 3: Step-by-Step & Results (Requirement #4 & โจทย์ข้อ 3, 4)
+# TAB 3: Step-by-Step & Results
 # ------------------------------------------
 with tab3:
     st.header("📝 ผลลัพธ์การคำนวณและตารางสรุปผล")
     
-    # Step-by-step Calculation
     with st.expander("🔍 ดูขั้นตอนการคำนวณทีละขั้นตอน (Step-by-Step)", expanded=True):
         st.markdown(f"""
         1. *กำหนดขอบเขตและจำนวนช่วง:* $a = {a}$, $b = {b}$, $n = {n}$
@@ -235,7 +212,6 @@ with tab3:
 
     st.markdown("---")
 
-    # ข้อ 3 ในโจทย์: ตารางแสดงค่า Error ตามจำนวนช่วง n
     st.subheader("1. ตารางแสดงค่า Error เมื่อเปลี่ยน n (ข้อ 3 ในโจทย์)")
     n_list = [8, 16, 32, 64]
     trap_errs, simp_errs = [], []
@@ -251,11 +227,8 @@ with tab3:
         "Trapezoidal Error |A - A~|": [f"{e:.6e}" for e in trap_errs],
         "Simpson Error |A - A~|": [f"{e:.6e}" for e in simp_errs]
     })
-    
-    # Requirement #4: st.dataframe
     st.dataframe(df_n_error, use_container_width=True)
 
-    # ข้อ 4 ในโจทย์: ตารางเปรียบเทียบ Error เมื่อ n = 64
     st.subheader("2. ตารางเปรียบเทียบ Error เมื่อ n = 64 (ข้อ 4 ในโจทย์)")
     t_64, _, _, _ = trapezoidal_rule(a, b, 64)
     s_64, _, _, _ = simpsons_rule(a, b, 64)
@@ -268,7 +241,6 @@ with tab3:
     })
     st.dataframe(df_compare_64, use_container_width=True)
 
-    # Output ตาม Format ในรูปโจทย์ข้อ 4
     st.subheader("3. Output ตาม Format ในโจทย์")
     st.code(
 f"""Method          A~1          Error A1
