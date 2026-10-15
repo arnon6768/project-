@@ -5,49 +5,45 @@ import plotly.graph_objects as go
 from scipy.integrate import quad
 
 # ==========================================
-# PAGE CONFIG & CUSTOM CSS (ตกแต่งความสวยงาม)
+# PAGE CONFIG
 # ==========================================
 st.set_page_config(
-    page_title="Numerical Integration Dashboard",
+    page_title="Project 3: Numerical Integration",
     page_icon="🧮",
     layout="wide"
 )
 
-# ตกแต่ง UI ด้วย Custom CSS ให้ดูเป็นแอปพลิเคชันมืออาชีพ
+# Custom CSS ตกแต่งแท็บและกล่องใส่ชื่อกลุ่ม
 st.markdown("""
 <style>
-    /* ปรับแต่งการ์ดแสดงผล */
-    .metric-card {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 15px;
-        border-left: 5px solid #1f77b4;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
-        margin-bottom: 10px;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-    }
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
+        height: 45px;
         background-color: #f1f3f5;
         border-radius: 8px 8px 0px 0px;
-        padding-top: 10px;
-        padding-bottom: 10px;
     }
     .stTabs [aria-selected="true"] {
         background-color: #1f77b4 !important;
         color: white !important;
     }
+    /* สไตล์สำหรับกล่องแสดงชื่อกลุ่ม */
+    .group-box {
+        background-color: #e8f4f8;
+        border-left: 5px solid #1f77b4;
+        padding: 12px 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        font-weight: bold;
+        color: #0f4c81;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# HELPER FUNCTIONS
+# HELPER FUNCTIONS (f(x) = sqrt(1 + e^x))
 # ==========================================
 def f(x):
-    """ฟังก์ชัน f(x) = sqrt(1 + e^x)"""
+    """ฟังก์ชัน f(x) = sqrt(1 + e^x) ตามโจทย์ Project 3"""
     return np.sqrt(1 + np.exp(x))
 
 def trapezoidal_rule(a, b, n):
@@ -59,7 +55,7 @@ def trapezoidal_rule(a, b, n):
 
 def simpsons_rule(a, b, n):
     if n % 2 != 0:
-        n += 1  # ปรับเป็นจำนวนคู่สำหรับ Simpson's rule
+        n += 1
     x = np.linspace(a, b, n + 1)
     y = f(x)
     h = (b - a) / n
@@ -67,99 +63,101 @@ def simpsons_rule(a, b, n):
     return integration, x, y, h
 
 # ==========================================
-# REQUIREMENT 5: Layout Organization (Sidebar)
+# SIDEBAR (Technical Requirement 1 & 5)
 # ==========================================
-st.sidebar.image("https://img.icons8.com/color/96/000000/calculator.png", width=70)
-st.sidebar.title("⚙️ แผงควบคุม (Controls)")
+st.sidebar.title("👥 ข้อมูลผู้จัดทำ")
+
+# --------------------------------------------------------------------------
+# [จุดที่ 1] ช่องกรอกชื่อกลุ่ม / สมาชิก (เปลี่ยนข้อความใน value="...")
+# --------------------------------------------------------------------------
+group_name = st.sidebar.text_input(
+    "ชื่อกลุ่ม / สมาชิกผู้จัดทำ:",
+    value="กลุ่มที่ XX : นายกะปิ ใจดี (65xxxxxxxx), นายสมชาย รักเรียน (65xxxxxxxx)"
+)
 st.sidebar.markdown("---")
 
-# REQUIREMENT 1: Interactive Controls (ใช้งาน 4 ชนิด)
-# Control 1: st.number_input
+st.sidebar.title("⚙️ ตั้งค่าพารามิเตอร์ (Inputs)")
+
+# Interactive Controls
 a = st.sidebar.number_input("📌 ขอบเขตล่าง (a):", value=0.0, step=0.1)
-
-# Control 2: st.number_input
-b = st.sidebar.number_input("📌 ขอบเขตบน (b):", value=1.0, step=0.1)
-
-# Control 3: st.select_slider
+b = st.sidebar.number_input("📌 ขอบเขตบน (b):", value=2.0, step=0.1)
 n = st.sidebar.select_slider("🔢 จำนวนช่วงแบ่ง (n):", options=[8, 16, 32, 64], value=64)
+method_choice = st.sidebar.selectbox("📈 เลือกวิธีแสดงผลกราฟ:", ["Trapezoidal Rule", "Simpson's Rule"])
 
-# Control 4: st.selectbox
-method_choice = st.sidebar.selectbox("📈 เลือกวิธีกราฟจำลอง:", ["Trapezoidal Rule", "Simpson's Rule"])
-
-# Control 5: st.color_picker (แถมตกแต่งกราฟ)
-chart_color = st.sidebar.color_picker("🎨 เลือกลูกเล่นสีแถบแรเงา:", "#3366CC")
-
-# คำนวณค่าจริงและค่าประมาณ
+# คำนวณค่าจริง Exact Value โดยใช้ scipy quad
 exact_val, _ = quad(f, a, b)
 trap_val, x_trap, y_trap, h_trap = trapezoidal_rule(a, b, n)
 simp_val, x_simp, y_simp, h_simp = simpsons_rule(a, b, n)
 
 # ==========================================
-# MAIN CONTENT & REQUIREMENT 5: st.tabs
+# MAIN CONTENT
 # ==========================================
-st.title("🧮 Project 3: Comparison of Numerical Integration Approximations")
-st.caption("แอปพลิเคชันเปรียบเทียบการประมาณค่าการอินทิเกรตทางตัวเลขแบบโต้ตอบ")
+st.title("Project 3: Comparison of Numerical Integration Approximations")
+
+# --------------------------------------------------------------------------
+# [จุดที่ 2] แสดงกล่องข้อความชื่อกลุ่มบนหน้าหลักแบบเด่นชัด
+# --------------------------------------------------------------------------
+if group_name:
+    st.markdown(f'<div class="group-box">📌 ผู้จัดทำ: {group_name}</div>', unsafe_allow_html=True)
+
+st.caption(f"ประมาณค่าอินทิเกรตของ f(x) = √(1 + eⁿ) จาก a = {a} ถึง b = {b}")
 
 tab1, tab2, tab3 = st.tabs([
     "📚 1. ทฤษฎี (Theory)", 
-    "📊 2. ตัวจำลอง (Dynamic Visualization)", 
-    "📝 3. สรุปผล & Step-by-Step"
+    "📊 2. ตัวจำลอง (Simulation & Graph)", 
+    "📝 3. สรุปผล (Results & Output)"
 ])
 
 # ------------------------------------------
-# TAB 1: ทฤษฎี (Mathematical Notation)
+# TAB 1: Theory
 # ------------------------------------------
 with tab1:
-    st.header("📖 ทฤษฎีและสมการคณิตศาสตร์")
-    st.markdown("โจทย์กำหนดให้ประมาณค่าพื้นที่ใต้กราฟ $A$ ของฟังก์ชัน:")
+    st.header("📖 ทฤษฎีการประมาณค่าการอินทิเกรตทางตัวเลข")
+    st.write("โจทย์กำหนดให้ประมาณค่าการอินทิเกรต:")
     
-    # REQUIREMENT 2: Mathematical Notation (st.latex)
     st.latex(r"A = \int_{a}^{b} \sqrt{1 + e^x} \, dx")
     
-    col_t1, col_t2 = st.columns(2)
-    
-    with col_t1:
+    col1, col2 = st.columns(2)
+    with col1:
         st.subheader("1. Trapezoidal Rule")
-        st.write("ประมาณค่าพื้นที่ด้วยรูปสี่เหลี่ยมคางหมูหลายรูปต่อกัน:")
+        st.write("ประมาณค่าด้วยรูปสี่เหลี่ยมคางหมู:")
         st.latex(r"\int_{a}^{b} f(x) \, dx \approx \frac{h}{2} \left[ f(x_0) + 2\sum_{i=1}^{n-1} f(x_i) + f(x_n) \right]")
         st.latex(r"h = \frac{b - a}{n}")
         
-    with col_t2:
+    with col2:
         st.subheader("2. Simpson's Rule")
-        st.write("ประมาณค่าพื้นที่ด้วยสมการพาราโบลา (ใช้ $n$ เป็นจำนวนคู่):")
+        st.write("ประมาณค่าด้วยสมการพาราโบลา (ใช้ $n$ เป็นจำนวนคู่):")
         st.latex(r"\int_{a}^{b} f(x) \, dx \approx \frac{h}{3} \left[ f(x_0) + 4\sum_{i \text{ odd}} f(x_i) + 2\sum_{i \text{ even}} f(x_i) + f(x_n) \right]")
         st.latex(r"h = \frac{b - a}{n}")
 
 # ------------------------------------------
-# TAB 2: Dynamic Visualization (Plotly Chart)
+# TAB 2: Dynamic Visualization
 # ------------------------------------------
 with tab2:
-    st.header("📊 กราฟปฏิสัมพันธ์ (Interactive Visualization)")
+    st.header("📊 กราฟจำลองพื้นที่และการแสดงผลคำนวณ")
     
-    # REQUIREMENT 4: Metrics Summary Card
     m1, m2, m3 = st.columns(3)
-    m1.metric("🎯 ค่าจริง (Exact Value)", f"{exact_val:.6f}")
+    m1.metric("🎯 ค่าจริง (Exact Value A)", f"{exact_val:.6f}")
     m2.metric("📐 Trapezoidal Approx.", f"{trap_val:.6f}", f"Error: {abs(exact_val - trap_val):.2e}", delta_color="inverse")
     m3.metric("🔵 Simpson's Approx.", f"{simp_val:.6f}", f"Error: {abs(exact_val - simp_val):.2e}", delta_color="inverse")
     
     st.markdown("---")
     
-    # REQUIREMENT 3: Data & Dynamic Visualization (st.plotly_chart)
-    st.subheader(f"แสดงพื้นที่การประมาณค่าด้วยวิธี {method_choice} (n = {n})")
+    st.subheader(f"พื้นที่ประมาณค่าด้วยวิธี {method_choice} (n = {n})")
     
     x_dense = np.linspace(a - 0.2, b + 0.2, 300)
     y_dense = f(x_dense)
     
     fig = go.Figure()
     
-    # เส้นฟังก์ชันจริง
+    # เส้นฟังก์ชัน f(x)
     fig.add_trace(go.Scatter(
         x=x_dense, y=y_dense, 
         mode='lines', name='f(x) = √(1 + eⁿ)',
-        line=dict(color='crimson', width=3)
+        line=dict(color='crimson', width=2.5)
     ))
     
-    # แรเงาพื้นที่ตามวิธีที่เลือก
+    # แรเงาพื้นที่ใต้กราฟ
     x_curr = x_trap if method_choice == "Trapezoidal Rule" else x_simp
     y_curr = y_trap if method_choice == "Trapezoidal Rule" else y_simp
     
@@ -167,51 +165,46 @@ with tab2:
         x=np.concatenate([x_curr, x_curr[::-1]]),
         y=np.concatenate([y_curr, np.zeros_like(y_curr)]),
         fill='toself',
-        fillcolor=chart_color,
-        opacity=0.5,
-        line=dict(color='royalblue'),
+        fillcolor='rgba(30, 144, 255, 0.6)',
+        line=dict(color='blue'),
         name=f'พื้นที่ประมาณค่า ({method_choice})'
     ))
     
-    # เพิ่มจุดพิกัด
+    # จุดพิกัดบนกราฟ
     fig.add_trace(go.Scatter(
         x=x_curr, y=y_curr,
-        mode='markers', name='Points (x_i, y_i)',
-        marker=dict(size=6, color='black')
+        mode='markers', name='Points',
+        marker=dict(size=5, color='black')
     ))
     
     fig.update_layout(
-        title=f"การจำลองการอินทิเกรตช่วง [{a}, {b}] โดยแบ่ง n = {n}",
+        title=f"การจำลองพื้นที่ใต้โค้งบนช่วง [{a}, {b}] (n = {n})",
         xaxis_title="x",
         yaxis_title="f(x)",
         hovermode="x unified",
         template="plotly_white",
-        height=500
+        height=480
     )
-    
     st.plotly_chart(fig, use_container_width=True)
 
 # ------------------------------------------
-# TAB 3: Step-by-Step Calculation & Tables
+# TAB 3: Step-by-Step & Tables
 # ------------------------------------------
 with tab3:
-    st.header("📝 การคำนวณทีละขั้นตอนและตารางสรุปผล")
+    st.header("📝 การคำนวณทีละขั้นตอนและสรุปผลตามโจทย์")
     
-    # REQUIREMENT 4: Step-by-Step Calculation
-    with st.expander("🔍 คลิกเพื่อดูขั้นตอนการคำนวณแบบ Step-by-Step (ณ ค่าปัจจุบัน)", expanded=True):
+    with st.expander("🔍 ดูขั้นตอนการคำนวณทีละขั้นตอน (Step-by-Step Calculation)", expanded=True):
         st.markdown(f"""
-        - *ช่วงการอินทิเกรต:* $a = {a}$, $b = {b}$
-        - *ขนาดความกว้างของช่วงย่อย ($h$):* $h = \\frac{{{b} - {a}}}{{{n}}} = {h_trap:.6f}$
-        - *ผลรวมที่จุดปลาย:* $f(a) = {f(a):.6f}$, $f(b) = {f(b):.6f}$
+        1. *กำหนดค่าพารามิเตอร์:* $a = {a}$, $b = {b}$, $n = {n}$
+        2. *คำนวณความกว้างช่วงย่อย ($h$):* $h = \\frac{{{b} - {a}}}{{{n}}} = {h_trap:.6f}$
+        3. *คำนวณค่า $f(x)$ ที่จุดขอบ:* $f({a}) = {f(a):.6f}$, $f({b}) = {f(b):.6f}$
+        4. *ผลลัพธ์การคำนวณ:*
+           - *Exact Value ($A$):* {exact_val:.6f}
+           - *Trapezoidal Value ($\tilde{{A}}$):* {trap_val:.6f} | *Error:* {abs(exact_val - trap_val):.6e}
+           - *Simpson Value ($\tilde{{A}}$):* {simp_val:.6f} | *Error:* {abs(exact_val - simp_val):.6e}
         """)
-        st.write("---")
-        st.markdown("*สูตรสรุปผลการคำนวณ:*")
-        st.latex(f"A_{{\\text{{Trapezoidal}}}} = {trap_val:.6f} \\quad (\\text{{Error}} = {abs(exact_val - trap_val):.6e})")
-        st.latex(f"A_{{\\text{{Simpson}}}} = {simp_val:.6f} \\quad (\\text{{Error}} = {abs(exact_val - simp_val):.6e})")
 
-    st.subheader("1. ตารางแสดงค่า Error ตามจำนวนช่วง n (n = 8, 16, 32, 64)")
-    
-    # REQUIREMENT 4: st.dataframe
+    st.subheader("1. ตารางแสดงค่า Error ตามจำนวนช่วง n (ข้อ 3 ในโจทย์)")
     n_list = [8, 16, 32, 64]
     trap_errs, simp_errs = [], []
     
@@ -224,24 +217,23 @@ with tab3:
     df_n_error = pd.DataFrame({
         "n": n_list,
         "Trapezoidal Error |A - A~|": [f"{e:.6e}" for e in trap_errs],
-        "Simpson's Error |A - A~|": [f"{e:.6e}" for e in simp_errs]
+        "Simpson Error |A - A~|": [f"{e:.6e}" for e in simp_errs]
     })
     st.dataframe(df_n_error, use_container_width=True)
 
-    st.subheader("2. ตารางเปรียบเทียบ Error เมื่อ n = 64")
-    
+    st.subheader("2. ตารางเปรียบเทียบ Error เมื่อ n = 64 (ข้อ 4 ในโจทย์)")
     t_64, _, _, _ = trapezoidal_rule(a, b, 64)
     s_64, _, _, _ = simpsons_rule(a, b, 64)
     
-    df_compare = pd.DataFrame({
+    df_compare_64 = pd.DataFrame({
         "Method": ["Trapezoidal", "Simpson"],
-        "A (Exact)": [f"{exact_val:.6f}", f"{exact_val:.6f}"],
-        "A~ (Approximated)": [f"{t_64:.6f}", f"{s_64:.6f}"],
+        "A": [f"{exact_val:.6f}", f"{exact_val:.6f}"],
+        "A~": [f"{t_64:.6f}", f"{s_64:.6f}"],
         "Error = |A - A~|": [f"{abs(exact_val - t_64):.6e}", f"{abs(exact_val - s_64):.6e}"]
     })
-    st.dataframe(df_compare, use_container_width=True)
+    st.dataframe(df_compare_64, use_container_width=True)
 
-    st.subheader("3. Output ตาม Format ที่โจทย์กำหนด")
+    st.subheader("3. Output ที่ได้จาก Python ตาม Format ในโจทย์")
     st.code(
 f"""Method          A~1          Error A1
 ----------------------------------------
