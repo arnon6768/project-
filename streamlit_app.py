@@ -86,7 +86,7 @@ st.sidebar.markdown("---")
 # --------------------------------------------------------------------------
 # ข้อมูลผู้จัดทำ (ย้ายมาไว้ด้านล่างสุดของ Sidebar)
 # --------------------------------------------------------------------------
-st.sidebar.title("👥 PROJECT#3")
+st.sidebar.title("👥 PROJECT3#")
 st.sidebar.markdown("""
 <div style="background-color: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
     <b>กลุ่มที่:</b> 3<br>
