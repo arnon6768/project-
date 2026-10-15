@@ -89,10 +89,12 @@ st.sidebar.markdown("---")
 st.sidebar.title("👥 ข้อมูลผู้จัดทำ")
 st.sidebar.markdown("""
 <div style="background-color: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #e9ecef;">
-    <b>กลุ่มที่:</b> 3<br>
+    <b>project:</b>กลุ่มที่ 3<br>
     <b>สมาชิกผู้จัดทำ:</b><br>
-    1. นายกิตติศักดิ์ ชัยชนะ (65012345)<br>
-    2. นายธนพล สุขใจ (65012346)
+    1. นายวงศธร นามประกอบ (67114140170)<br>
+    2. นายอานนท์ เมืองโคตร (67114140259)
+    3. นายสาวสุภาวดี จินดาพงศ์ (67114140228)
+    4. นายสาวรุจิศยา อุปนิ (67114140167)
 </div>
 """, unsafe_allow_html=True)
 
