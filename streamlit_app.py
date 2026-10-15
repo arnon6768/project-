@@ -71,8 +71,8 @@ def simpsons_rule(a, b, n):
 st.sidebar.title("⚙️ ตั้งค่าพารามิเตอร์ (Inputs)")
 
 # Interactive Controls
-a = st.sidebar.number_input("📌 ขอบเขตล่าง (a):", value=0.0, step=0.0001)
-b = st.sidebar.number_input("📌 ขอบเขตบน (b):", value=2.0, step=0.0001)
+a = st.sidebar.number_input("📌 ขอบเขตล่าง (a):", value=0.0, step=0.0001, format="%.4f")
+b = st.sidebar.number_input("📌 ขอบเขตบน (b):", value=2.0, step=0.0001, format="%.4f")
 n = st.sidebar.select_slider("🔢 จำนวนช่วงแบ่ง (n):", options=[8, 16, 32, 64], value=64)
 method_choice = st.sidebar.selectbox("📈 เลือกวิธีแสดงผลกราฟ:", ["Trapezoidal Rule", "Simpson's Rule"])
 
